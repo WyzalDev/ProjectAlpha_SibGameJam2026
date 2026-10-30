@@ -15,7 +15,7 @@ MonoBehaviour:
   _flashColor: {r: 1, g: 1, b: 1, a: 1}
   _range: 12
   _areaAngle: 70
-  _maxIntensity: 10
+  _maxIntensity: 100
   _duration: 0.1
   _fadeOutDuration: 0.4
   _fadeOutCurve:
