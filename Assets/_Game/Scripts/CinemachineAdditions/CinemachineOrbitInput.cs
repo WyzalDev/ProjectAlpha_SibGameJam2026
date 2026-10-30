@@ -13,11 +13,14 @@ namespace _Game.Scripts.CinemachineAdditions
         [SerializeField] private float _degreesPerPixel = 0.15f;
         [SerializeField] private bool _invertY;
 
+        private const float MinMoveInputSqr = 0.0001f;
+
         private CinemachineOrbitalFollow _orbital;
         private IInputHandler _input;
         private IPauseController _pauseController;
         private float _sensitivity = 1f;
         private bool _canRotate = true;
+        private bool _isRecenterFrozen;
 
         public float Sensitivity
         {
@@ -39,7 +42,10 @@ namespace _Game.Scripts.CinemachineAdditions
 
             _input = ServiceLocator.GetService<IInputHandler>();
             if (_input != null)
+            {
                 _input.RotateInputChanged += OnLook;
+                _input.PlayerMoveInputChanged += OnMoveInputChanged;
+            }
 
             _pauseController = ServiceLocator.GetService<IPauseController>();
             _pauseController?.Add(this);
@@ -48,9 +54,35 @@ namespace _Game.Scripts.CinemachineAdditions
         private void OnDestroy()
         {
             if (_input != null)
+            {
                 _input.RotateInputChanged -= OnLook;
+                _input.PlayerMoveInputChanged -= OnMoveInputChanged;
+            }
 
             _pauseController?.Remove(this);
+        }
+
+        private void OnMoveInputChanged(Vector2 moveDirection)
+        {
+            bool hasMovement = moveDirection.sqrMagnitude > MinMoveInputSqr;
+
+            if (_isRecenterFrozen == hasMovement)
+                return;
+
+            if (_orbital == null)
+                return;
+
+            _isRecenterFrozen = hasMovement;
+
+            // Рекентеринг центра орбиты динамически следует за игроком, поэтому
+            // при движении (особенно назад) он раскачивает камеру — замораживаем его,
+            // а после остановки вновь включаем, чтобы камера вернулась «за спину».
+            var recentering = _orbital.HorizontalAxis.Recentering;
+            recentering.Enabled = hasMovement == false;
+            _orbital.HorizontalAxis.Recentering = recentering;
+
+            if (hasMovement)
+                _orbital.HorizontalAxis.CancelRecentering();
         }
 
         private void OnLook(Vector2 delta)
