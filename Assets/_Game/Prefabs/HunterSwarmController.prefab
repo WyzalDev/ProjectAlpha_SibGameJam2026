@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &8485722158969174810
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2777274984276545203}
+  - component: {fileID: 6806951488438049519}
+  m_Layer: 0
+  m_Name: HunterSwarmController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2777274984276545203
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8485722158969174810}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6806951488438049519
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8485722158969174810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 350d660e618d4c74ae12b09a33018bb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.Enemies.Swarm.HunterSwarmController
+  _playerTarget: {fileID: 0}
+  _initialRadius: 3.8
+  _minimumRadius: 0.75
+  _contractionDelay: 0.3
+  _contractionSpeed: 0.7
+  _startingAngle: 0
+  _alignWithPlayerForward: 1
+  _interceptorLeadDistance: 2.2
+  _minimumInterceptorLeadDistance: 1.1
+  _flankerForwardDistance: 0.8
+  _flankerSideDistance: 3
+  _minimumFlankerSideDistance: 2
+  _predictionTime: 0.25
+  _maximumPredictionDistance: 2.5
+  _maximumTrackedPlayerSpeed: 8
+  _playerVelocitySmoothing: 10
+  _formationRotationSpeed: 360
+  _formationUpdateInterval: 0.12
+  _minimumDestinationChange: 0.12
+  _navMeshSampleRadius: 0.6
+  _minimumSlotSpacing: 0.75
+  _candidateSearchSteps: 5
+  _candidateAngleStep: 15
+  _pressureRampDuration: 12
+  _maximumPressureSpeedMultiplier: 1.75
+  _maximumContractionSpeedMultiplier: 1.65
+  _interceptorSpeedBonus: 1.1
+  _flankerSpeedBonus: 1.05
+  _pursuerSpeedBonus: 1.08
+  _catchDistance: 1.4
+  _catchCheckInterval: 0.05
