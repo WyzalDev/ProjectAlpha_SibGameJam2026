@@ -265,10 +265,11 @@ namespace _Game.Scripts.Core.Features.Enemies
             UpdateChaseDestination(force: true);
         }
 
-        private void EnterAttention()
+        private void EnterAttention(bool force = false)
         {
-            if (_state == RobotState.Stunned ||
-                _state == RobotState.Attacking)
+            if (!force &&
+                (_state == RobotState.Stunned ||
+                 _state == RobotState.Attacking))
             {
                 return;
             }
@@ -285,8 +286,6 @@ namespace _Game.Scripts.Core.Features.Enemies
             if (_animationController != null)
                 _animationController.PlayAttention();
 
-            // Keep scanning during attention.
-            // A new detection immediately switches the robot back to Chase.
             _scanner.SetScanning(true);
         }
 
@@ -408,8 +407,8 @@ namespace _Game.Scripts.Core.Features.Enemies
             if (_animationController != null)
                 _animationController.SetStunned(false);
 
-            // After recovering, always look around before returning to idle.
-            EnterAttention();
+            // Force transition because the current state is still Stunned.
+            EnterAttention(force: true);
         }
 
         private IEnumerator AttackRoutine(PlayerTarget target)

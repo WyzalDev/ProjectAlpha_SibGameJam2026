@@ -17,7 +17,7 @@ MonoBehaviour:
   AngularSpeed: 360
   StoppingDistance: 1
   AttentionDuration: {x: 1, y: 2}
-  StunDuration: 3
+  StunDuration: 1
   ChaseUpdateInterval: 0.2
   AttackDistance: 1.2
   AttackHitDelay: 0.35
