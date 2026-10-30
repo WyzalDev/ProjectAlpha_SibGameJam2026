@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using _Game.Scripts.Core.Common.Pause;
+using UnityEngine;
 using UnityEngine.AI;
 
 namespace _Game.Scripts.Core.Features.Enemies.Swarm
@@ -13,7 +14,7 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
     }
 
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class HunterRobotAI : MonoBehaviour
+    public sealed class HunterRobotAI : MonoBehaviour, IPausable
     {
         [Header("References")]
         [SerializeField] private HunterSwarmController _swarmController;
@@ -38,6 +39,9 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
         private Vector3 _lastDestination;
 
         private float _baseAgentSpeed;
+        
+        private bool _isPaused;
+        private bool _wasAgentStoppedBeforePause;
 
         public bool IsHunting => _isHunting;
         public HunterRole Role => _role;
@@ -91,7 +95,7 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
 
         private void Update()
         {
-            if (!_isHunting || _agent == null)
+            if (!_isHunting || _isPaused || _agent == null)
                 return;
 
             if (_agent.isActiveAndEnabled && _agent.isOnNavMesh)
@@ -258,6 +262,44 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
             }
 
             _animationController?.SetMovementSpeed(0f);
+        }
+
+        public void Stop()
+        {
+            if (_isPaused)
+                return;
+
+            _isPaused = true;
+
+            if (_agent == null ||
+                !_agent.isActiveAndEnabled ||
+                !_agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            _wasAgentStoppedBeforePause = _agent.isStopped;
+            _agent.isStopped = true;
+
+            _animationController?.SetMovementSpeed(0f);
+        }
+
+        public void Resume()
+        {
+            if (!_isPaused)
+                return;
+
+            _isPaused = false;
+
+            if (_agent == null ||
+                !_agent.isActiveAndEnabled ||
+                !_agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            // Не запускаем агента, если охота уже была остановлена.
+            _agent.isStopped = !_isHunting || _wasAgentStoppedBeforePause;
         }
     }
 }

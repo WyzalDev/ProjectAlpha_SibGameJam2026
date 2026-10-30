@@ -1,10 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using _Game.Scripts.Core.Common;
+using _Game.Scripts.Core.Common.Pause;
 using _Game.Scripts.Core.Features.Player.Death;
 using UnityEngine;
 
 namespace _Game.Scripts.Core.Features.Enemies.Swarm
 {
-    public sealed class HunterSwarmController : MonoBehaviour
+    public sealed class HunterSwarmController : MonoBehaviour, IPausable
     {
         [Header("References")]
         [SerializeField] private PlayerTarget _playerTarget;
@@ -77,10 +80,27 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
         private bool _hasLastPlayerPosition;
         private bool _isHuntingStopped;
         private bool _isSubscribedToDeathEvent;
+        
+        private bool _isPaused;
+        private IPauseController _pauseController;
 
         public int HunterCount => _hunters.Count;
 
         public float CurrentRadius => _currentRadius;
+
+        public void Init()
+        {
+            _pauseController = ServiceLocator.GetService<IPauseController>();
+            _pauseController?.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            _pauseController?.Remove(this);
+            
+            foreach (var hunter in _hunters)
+                _pauseController?.Remove(hunter);
+        }
 
         private void Awake()
         {
@@ -134,7 +154,8 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
 
         private void Update()
         {
-            if (_isHuntingStopped ||
+            if (_isPaused ||
+                _isHuntingStopped ||
                 _playerTarget == null ||
                 _hunters.Count == 0)
             {
@@ -170,6 +191,7 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
             bool isFirstHunter = _hunters.Count == 0;
 
             _hunters.Add(hunter);
+            _pauseController?.Add(hunter);
 
             hunter.SetFormationSlot(_nextFormationSlot++);
 
@@ -207,6 +229,7 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
             if (!_hunters.Remove(hunter))
                 return;
 
+            _pauseController?.Remove(hunter);
             ReassignTacticalRoles();
 
             _formationTimer = 0f;
@@ -917,6 +940,31 @@ namespace _Game.Scripts.Core.Features.Enemies.Swarm
             _catchCheckInterval = Mathf.Max(
                 0.02f,
                 _catchCheckInterval);
+        }
+
+        public void Stop()
+        {
+            if (_isPaused)
+                return;
+
+            _isPaused = true;
+
+            // Сбрасываем данные движения, чтобы после паузы
+            // не получить резкий скачок вычисленной скорости.
+            _playerVelocity = Vector3.zero;
+            _hasLastPlayerPosition = false;
+        }
+
+        public void Resume()
+        {
+            if (!_isPaused)
+                return;
+
+            _isPaused = false;
+
+            // Обновить позиции охотников сразу после возобновления.
+            _formationTimer = 0f;
+            _catchTimer = 0f;
         }
     }
 }

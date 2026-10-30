@@ -1,13 +1,16 @@
-﻿using _Game.Scripts.Core.Features.Enemies;
+﻿using System;
+using _Game.Scripts.Core.Features.Enemies;
 using _Game.Scripts.Core.Features.Enemies.Swarm;
 using System.Collections.Generic;
+using _Game.Scripts.Core.Common;
+using _Game.Scripts.Core.Common.Pause;
 using DG.Tweening;
 using UnityEngine;
 
 namespace _Game.Scripts.Core.Features.PressedPlate
 {
     [RequireComponent(typeof(BoxCollider), typeof(Rigidbody))]
-    public class PressurePlate : MonoBehaviour
+    public class PressurePlate : MonoBehaviour, IPausable
     {
         [Header("References")]
         [SerializeField] private Transform _plateVisual;
@@ -32,7 +35,7 @@ namespace _Game.Scripts.Core.Features.PressedPlate
         private Tween _movementTween;
 
         private bool _isPressed;
-
+        private IPauseController _pauseController;
         public bool IsPressed => _isPressed;
         public float Progress => _progress;
 
@@ -44,6 +47,17 @@ namespace _Game.Scripts.Core.Features.PressedPlate
 
             if (enemiesLayer >= 0)
                 _robotLayers = 1 << enemiesLayer;
+        }
+
+        public void Init()
+        {
+            _pauseController = ServiceLocator.GetService<IPauseController>();
+            _pauseController?.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            _pauseController?.Remove(this);
         }
 
         private void Awake()
@@ -227,6 +241,16 @@ namespace _Game.Scripts.Core.Features.PressedPlate
             _pressDuration = Mathf.Max(0.01f, _pressDuration);
             _releaseDuration = Mathf.Max(0.01f, _releaseDuration);
             _pressDepth = Mathf.Max(0f, _pressDepth);
+        }
+
+        public void Stop()
+        {
+            _movementTween?.Pause();
+        }
+
+        public void Resume()
+        {
+            _movementTween?.Play();
         }
     }
 }

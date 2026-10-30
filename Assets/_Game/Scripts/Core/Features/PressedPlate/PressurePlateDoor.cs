@@ -1,9 +1,11 @@
-﻿using DG.Tweening;
+﻿using _Game.Scripts.Core.Common;
+using _Game.Scripts.Core.Common.Pause;
+using DG.Tweening;
 using UnityEngine;
 
 namespace _Game.Scripts.Core.Features.PressedPlate
 {
-    public class PressurePlateDoor : MonoBehaviour, IPressurePlateListener
+    public class PressurePlateDoor : MonoBehaviour, IPressurePlateListener, IPausable
     {
         [Header("References")]
         [SerializeField] private Transform _doorVisual;
@@ -22,9 +24,20 @@ namespace _Game.Scripts.Core.Features.PressedPlate
         private Tween _movementTween;
 
         private bool _isOpen;
-
+        private IPauseController _pauseController;
         public bool IsOpen => _isOpen;
 
+        public void Init()
+        {
+            _pauseController = ServiceLocator.GetService<IPauseController>();
+            _pauseController?.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            _pauseController?.Remove(this);
+        }
+        
         private void Awake()
         {
             if (_doorVisual == null)
@@ -106,6 +119,16 @@ namespace _Game.Scripts.Core.Features.PressedPlate
             _openDuration = Mathf.Max(0.01f, _openDuration);
             _closeDuration = Mathf.Max(0.01f, _closeDuration);
             _openDistance = Mathf.Max(0f, _openDistance);
+        }
+
+        public void Stop()
+        {
+            _movementTween?.Pause();
+        }
+
+        public void Resume()
+        {
+            _movementTween?.Play();
         }
     }
 }

@@ -1,4 +1,7 @@
+using System;
 using System.Collections;
+using _Game.Scripts.Core.Common;
+using _Game.Scripts.Core.Common.Pause;
 using _Game.Scripts.Core.Features.Enemies.Behaviours;
 using _Game.Scripts.Core.Features.Enemies.Data;
 using _Game.Scripts.Core.Features.Enemies.Scanner;
@@ -10,7 +13,7 @@ namespace _Game.Scripts.Core.Features.Enemies
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class RobotAI : MonoBehaviour
+    public sealed class RobotAI : MonoBehaviour, IPausable
     {
         [Header("Required references")]
         [SerializeField] private RobotData _data;
@@ -30,6 +33,10 @@ namespace _Game.Scripts.Core.Features.Enemies
         private Coroutine _attackRoutine;
 
         private bool _initialized;
+        
+        private bool _isPaused;
+        private bool _wasAgentStoppedBeforePause;
+        private IPauseController _pauseController;
 
         public RobotState State => _state;
         public PlayerTarget CurrentTarget => _target;
@@ -56,6 +63,17 @@ namespace _Game.Scripts.Core.Features.Enemies
 
             if (_idleBehaviour == null)
                 _idleBehaviour = GetComponent<RobotIdleBehaviour>();
+        }
+
+        public void Init()
+        {
+            _pauseController = ServiceLocator.GetService<IPauseController>();
+            _pauseController?.Add(this);
+        }
+
+        private void OnDestroy()
+        {
+            _pauseController?.Remove(this);
         }
 
         private void Start()
@@ -132,7 +150,7 @@ namespace _Game.Scripts.Core.Features.Enemies
 
         private void Update()
         {
-            if (!_initialized)
+            if (!_initialized || _isPaused)
                 return;
 
             if (_animationController != null)
@@ -453,6 +471,50 @@ namespace _Game.Scripts.Core.Features.Enemies
             Gizmos.DrawWireSphere(
                 transform.position,
                 _data.AttackDistance);
+        }
+
+        public void Stop()
+        {
+            if (_isPaused)
+                return;
+
+            _isPaused = true;
+
+            if (_agent == null ||
+                !_agent.isActiveAndEnabled ||
+                !_agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            _wasAgentStoppedBeforePause = _agent.isStopped;
+            _agent.isStopped = true;
+
+            _animationController?.SetMovementSpeed(0f);
+        }
+
+        public void Resume()
+        {
+            if (!_isPaused)
+                return;
+
+            _isPaused = false;
+
+            if (_agent == null ||
+                !_agent.isActiveAndEnabled ||
+                !_agent.isOnNavMesh)
+            {
+                return;
+            }
+
+            // Некоторые состояния намеренно останавливают агента.
+            bool stateRequiresStoppedAgent =
+                _state == RobotState.Attention ||
+                _state == RobotState.Attacking ||
+                _state == RobotState.Stunned;
+
+            _agent.isStopped =
+                _wasAgentStoppedBeforePause || stateRequiresStoppedAgent;
         }
     }
 }

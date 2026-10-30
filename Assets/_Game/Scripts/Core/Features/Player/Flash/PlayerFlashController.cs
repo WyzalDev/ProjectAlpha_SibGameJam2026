@@ -3,13 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using _Game.Scripts.Core.Common;
 using _Game.Scripts.Core.Common.Input;
+using _Game.Scripts.Core.Common.Pause;
 using _Game.Scripts.Core.Features.Enemies;
 using UnityEngine;
 
 namespace _Game.Scripts.Core.Features.Player.Flash
 {
     [DisallowMultipleComponent]
-    public sealed class PlayerFlashController : MonoBehaviour
+    public sealed class PlayerFlashController : MonoBehaviour, IPausable
     {
         [Header("References")]
         [SerializeField] private PlayerFlashData _data;
@@ -39,6 +40,9 @@ namespace _Game.Scripts.Core.Features.Player.Flash
         private bool _isInitialized;
         private bool _isSubscribed;
         private bool _bufferWarningShown;
+        private bool _isPaused;
+        
+        private IPauseController _pauseController;
 
         /// <summary>
         /// Invoked when a flash is successfully activated.
@@ -93,6 +97,7 @@ namespace _Game.Scripts.Core.Features.Player.Flash
 
         private void OnDestroy()
         {
+            _pauseController?.Remove(this);
             UnsubscribeInput();
         }
 
@@ -108,6 +113,9 @@ namespace _Game.Scripts.Core.Features.Player.Flash
                 SubscribeInput();
                 return;
             }
+            
+            _pauseController = ServiceLocator.GetService<IPauseController>();
+            _pauseController?.Add(this);
 
             _inputHandler = ServiceLocator.GetService<IInputHandler>();
 
@@ -153,6 +161,9 @@ namespace _Game.Scripts.Core.Features.Player.Flash
 
         private void HandlePhotoPerformed()
         {
+            if (_isPaused)
+                return;
+
             TryFlash();
         }
 
@@ -417,6 +428,16 @@ namespace _Game.Scripts.Core.Features.Player.Flash
             Gizmos.DrawLine(
                 position + leftDirection * _data.Range,
                 position + rightDirection * _data.Range);
+        }
+
+        public void Stop()
+        {
+            _isPaused = true;
+        }
+
+        public void Resume()
+        {
+            _isPaused = false;
         }
     }
 }
