@@ -23,9 +23,12 @@ namespace _Game.Scripts.Core.Features.Enemies
         [SerializeField] private RobotState _state;
 
         private PlayerTarget _target;
+
         private float _stateTimer;
         private float _nextChaseUpdate;
+
         private Coroutine _attackRoutine;
+
         private bool _initialized;
 
         public RobotState State => _state;
@@ -44,21 +47,29 @@ namespace _Game.Scripts.Core.Features.Enemies
         {
             if (_agent == null)
                 _agent = GetComponent<NavMeshAgent>();
+
             if (_scanner == null)
                 _scanner = GetComponent<RobotScanner>();
+
             if (_animationController == null)
                 _animationController = GetComponent<RobotAnimationController>();
+
             if (_idleBehaviour == null)
                 _idleBehaviour = GetComponent<RobotIdleBehaviour>();
         }
 
         private void Start()
         {
-            if (_data == null || _agent == null || _scanner == null || _idleBehaviour == null)
+            if (_data == null ||
+                _agent == null ||
+                _scanner == null ||
+                _idleBehaviour == null)
             {
                 Debug.LogError(
                     $"{nameof(RobotAI)} on {name}: assign RobotData, NavMeshAgent, RobotScanner " +
-                    "and one RobotIdleBehaviour (Patrol or Worker).", this);
+                    "and one RobotIdleBehaviour (Patrol or Worker).",
+                    this);
+
                 enabled = false;
                 return;
             }
@@ -67,7 +78,9 @@ namespace _Game.Scripts.Core.Features.Enemies
             {
                 Debug.LogError(
                     $"{nameof(RobotAI)} on {name}: NavMeshAgent is not placed on a baked NavMesh. " +
-                    "Move the robot onto the NavMesh and check the Agent Type.", this);
+                    "Move the robot onto the NavMesh and check the Agent Type.",
+                    this);
+
                 enabled = false;
                 return;
             }
@@ -79,20 +92,42 @@ namespace _Game.Scripts.Core.Features.Enemies
             _agent.updateRotation = true;
 
             _idleBehaviour.Initialize(_agent, _animationController);
+
             _scanner.PlayerDetected += HandlePlayerDetected;
             _scanner.PlayerLost += HandlePlayerLost;
 
             _initialized = true;
+
             EnterIdle();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             if (_scanner != null)
             {
                 _scanner.PlayerDetected -= HandlePlayerDetected;
                 _scanner.PlayerLost -= HandlePlayerLost;
             }
+
+            if (_attackRoutine != null)
+            {
+                StopCoroutine(_attackRoutine);
+                _attackRoutine = null;
+            }
+        }
+
+        private void OnEnable()
+        {
+            // Start() performs initialization and event subscription.
+            // Re-enabling an already initialized robot restores subscriptions.
+            if (!_initialized || _scanner == null)
+                return;
+
+            _scanner.PlayerDetected -= HandlePlayerDetected;
+            _scanner.PlayerLost -= HandlePlayerLost;
+
+            _scanner.PlayerDetected += HandlePlayerDetected;
+            _scanner.PlayerLost += HandlePlayerLost;
         }
 
         private void Update()
@@ -151,25 +186,40 @@ namespace _Game.Scripts.Core.Features.Enemies
             if (_animationController != null)
                 _animationController.SetStunned(true);
 
+            // Disabling scanner also clears its current target.
+            // State is already Stunned, so PlayerLost will not change the state.
             _scanner.SetScanning(false);
         }
 
         private void HandlePlayerDetected(PlayerTarget target)
         {
-            if (!_initialized || target == null ||
-                _state == RobotState.Stunned || _state == RobotState.Attacking)
+            if (!_initialized ||
+                target == null ||
+                !target.isActiveAndEnabled ||
+                _state == RobotState.Stunned ||
+                _state == RobotState.Attacking)
+            {
                 return;
+            }
 
-            if (target.DeathController != null && target.DeathController.IsDead)
+            if (target.DeathController != null &&
+                target.DeathController.IsDead)
+            {
                 return;
+            }
 
             EnterChase(target);
         }
 
         private void HandlePlayerLost(PlayerTarget lostTarget)
         {
-            if (_state != RobotState.Chasing || _target != lostTarget)
+            if (!_initialized ||
+                lostTarget == null ||
+                _state != RobotState.Chasing ||
+                _target != lostTarget)
+            {
                 return;
+            }
 
             EnterAttention();
         }
@@ -186,12 +236,16 @@ namespace _Game.Scripts.Core.Features.Enemies
             }
 
             _idleBehaviour.EnterIdle();
+
             _scanner.SetVisualState(RobotScannerVisualState.Idle);
             _scanner.SetScanning(true);
         }
 
         private void EnterChase(PlayerTarget target)
         {
+            if (target == null)
+                return;
+
             if (_state == RobotState.Idle)
                 _idleBehaviour.ExitIdle();
 
@@ -207,31 +261,39 @@ namespace _Game.Scripts.Core.Features.Enemies
 
             _scanner.SetVisualState(RobotScannerVisualState.Chase);
             _scanner.SetScanning(true);
+
             UpdateChaseDestination(force: true);
         }
 
         private void EnterAttention()
         {
-            if (_state == RobotState.Stunned || _state == RobotState.Attacking)
+            if (_state == RobotState.Stunned ||
+                _state == RobotState.Attacking)
+            {
                 return;
+            }
 
             _state = RobotState.Attention;
             _target = null;
+
             _stateTimer = _data.GetRandomAttentionDuration();
 
             StopAgent(clearPath: true);
+
             _scanner.SetVisualState(RobotScannerVisualState.Attention);
 
             if (_animationController != null)
                 _animationController.PlayAttention();
 
-            // Keep scanning during attention. A new detection immediately switches back to Chase.
+            // Keep scanning during attention.
+            // A new detection immediately switches the robot back to Chase.
             _scanner.SetScanning(true);
         }
 
         private void EnterReturning()
         {
             _state = RobotState.Returning;
+
             _scanner.SetVisualState(RobotScannerVisualState.Attention);
 
             if (_agent != null && _agent.isOnNavMesh)
@@ -245,37 +307,52 @@ namespace _Game.Scripts.Core.Features.Enemies
 
         private void EnterAttacking()
         {
+            if (_target == null)
+                return;
+
+            PlayerTarget attackTarget = _target;
+
             _state = RobotState.Attacking;
+
             StopAgent(clearPath: true);
+
             _scanner.SetScanning(false);
 
-            if (_target != null)
+            Vector3 direction =
+                attackTarget.transform.position - transform.position;
+
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude > 0.001f)
             {
-                Vector3 direction = _target.transform.position - transform.position;
-                direction.y = 0f;
-                if (direction.sqrMagnitude > 0.001f)
-                    transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+                transform.rotation = Quaternion.LookRotation(
+                    direction.normalized,
+                    Vector3.up);
             }
 
             if (_animationController != null)
                 _animationController.PlayAttack();
 
-            _attackRoutine = StartCoroutine(AttackRoutine(_target));
+            _attackRoutine = StartCoroutine(AttackRoutine(attackTarget));
         }
 
         private void UpdateChasing()
         {
             if (_target == null ||
-                (_target.DeathController != null && _target.DeathController.IsDead))
+                (_target.DeathController != null &&
+                 _target.DeathController.IsDead))
             {
                 EnterAttention();
                 return;
             }
 
-            Vector3 difference = _target.transform.position - transform.position;
+            Vector3 difference =
+                _target.transform.position - transform.position;
+
             difference.y = 0f;
 
-            if (difference.sqrMagnitude <= _data.AttackDistance * _data.AttackDistance)
+            if (difference.sqrMagnitude <=
+                _data.AttackDistance * _data.AttackDistance)
             {
                 EnterAttacking();
                 return;
@@ -287,19 +364,26 @@ namespace _Game.Scripts.Core.Features.Enemies
 
         private void UpdateChaseDestination(bool force)
         {
-            if (_target == null || _agent == null || !_agent.isOnNavMesh)
+            if (_target == null ||
+                _agent == null ||
+                !_agent.isOnNavMesh)
+            {
                 return;
+            }
 
             if (!force && Time.time < _nextChaseUpdate)
                 return;
 
-            _nextChaseUpdate = Time.time + _data.ChaseUpdateInterval;
+            _nextChaseUpdate =
+                Time.time + _data.ChaseUpdateInterval;
+
             _agent.SetDestination(_target.transform.position);
         }
 
         private void UpdateAttention()
         {
             _stateTimer -= Time.deltaTime;
+
             if (_stateTimer > 0f)
                 return;
 
@@ -309,6 +393,7 @@ namespace _Game.Scripts.Core.Features.Enemies
         private void UpdateReturning()
         {
             _idleBehaviour.TickReturn();
+
             if (_idleBehaviour.IsReturnComplete)
                 EnterIdle();
         }
@@ -316,13 +401,14 @@ namespace _Game.Scripts.Core.Features.Enemies
         private void UpdateStunned()
         {
             _stateTimer -= Time.deltaTime;
+
             if (_stateTimer > 0f)
                 return;
 
             if (_animationController != null)
                 _animationController.SetStunned(false);
 
-            // After recovering, always look around before returning to the idle routine.
+            // After recovering, always look around before returning to idle.
             EnterAttention();
         }
 
@@ -331,12 +417,18 @@ namespace _Game.Scripts.Core.Features.Enemies
             if (_data.AttackHitDelay > 0f)
                 yield return new WaitForSeconds(_data.AttackHitDelay);
 
-            if (target != null && target.DeathController != null)
+            if (target != null &&
+                target.DeathController != null)
+            {
                 target.DeathController.Die();
+            }
             else
+            {
                 Debug.LogError(
                     $"{nameof(RobotAI)} on {name}: target has no PlayerDeathController. " +
-                    "Add one to the player and assign it on PlayerTarget.", this);
+                    "Add one to the player and assign it on PlayerTarget.",
+                    this);
+            }
 
             _attackRoutine = null;
         }
@@ -347,6 +439,7 @@ namespace _Game.Scripts.Core.Features.Enemies
                 return;
 
             _agent.isStopped = true;
+
             if (clearPath)
                 _agent.ResetPath();
         }
@@ -357,7 +450,10 @@ namespace _Game.Scripts.Core.Features.Enemies
                 return;
 
             Gizmos.color = new Color(1f, 0.15f, 0.1f, 0.9f);
-            Gizmos.DrawWireSphere(transform.position, _data.AttackDistance);
+
+            Gizmos.DrawWireSphere(
+                transform.position,
+                _data.AttackDistance);
         }
     }
 }

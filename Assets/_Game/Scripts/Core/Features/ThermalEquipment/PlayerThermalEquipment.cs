@@ -21,20 +21,26 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
         public float CurrentHeat => _currentHeat;
         public bool IsEquipped => _currentItem != null;
         public bool IsOverheated => _isOverheated;
+
         public event Action OnOverheated;
         public event Action<float> OnHeatChanged;
+        public event Action<bool> VisibilityResistanceChanged;
 
         private IInputHandler _inputHandler;
-        
+
         private ThermalEquipmentItem _currentItem;
         private ThermalEquipmentData _currentData;
 
         private bool _isOverheated;
-        
+        private bool _isInitialized;
+
         private float _lastCoolingSpeed;
 
         public void Init()
         {
+            if (_isInitialized)
+                return;
+
             _inputHandler = ServiceLocator.GetService<IInputHandler>();
 
             if (_inputHandler == null)
@@ -47,6 +53,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
             }
 
             _inputHandler.UnequipPerformed += OnUnequipPerformed;
+            _isInitialized = true;
         }
 
         private void OnUnequipPerformed()
@@ -73,12 +80,12 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
             if (item == null || IsEquipped || _isOverheated)
                 return false;
 
-            if(!CheckReferences(item))
+            if (!CheckReferences(item))
                 return false;
 
             _currentItem = item;
             _currentData = item.Data;
-            
+
             _lastCoolingSpeed = _currentData.CoolingPerSecond;
 
             // Attach item to player.
@@ -88,7 +95,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
             return true;
         }
-        
+
         private bool TryUnequip()
         {
             if (!IsEquipped)
@@ -102,6 +109,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
         private bool CheckReferences(ThermalEquipmentItem item)
         {
             if (_playerMotor == null ||
+                _interactionScanner == null ||
                 _equipmentAnchor == null ||
                 item.Data == null)
             {
@@ -111,7 +119,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
                 return false;
             }
-            
+
             return true;
         }
 
@@ -127,9 +135,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
                 SetHeat(newHeat);
 
                 if (_currentHeat >= _currentData.MaxHeat)
-                {
                     Unequip(true);
-                }
 
                 return;
             }
@@ -144,9 +150,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
             SetHeat(cooledHeat);
 
             if (_isOverheated && _currentHeat <= 0f)
-            {
                 _isOverheated = false;
-            }
         }
 
         private void Unequip(bool overheated)
@@ -170,16 +174,14 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
                 HandleOverheated();
             }
         }
-        
+
         private void HandleOverheated()
         {
-            // Notify other systems.
             OnOverheated?.Invoke();
 
-            // Future audio and animation implementation.
             PlayOverheatFeedback();
         }
-        
+
         private void SetHeat(float value)
         {
             if (Mathf.Approximately(_currentHeat, value))
@@ -187,6 +189,15 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
             _currentHeat = value;
             OnHeatChanged?.Invoke(_currentHeat);
+        }
+
+        private void SetVisibilityResistance(bool value)
+        {
+            if (HasVisibilityResistance == value)
+                return;
+
+            HasVisibilityResistance = value;
+            VisibilityResistanceChanged?.Invoke(value);
         }
 
         private void PlayOverheatFeedback()
@@ -199,7 +210,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
         private void OnEquipped()
         {
-            HasVisibilityResistance = true;
+            SetVisibilityResistance(true);
 
             _playerMotor.SetEquipmentMovement(
                 _currentData.SpeedMultiplier,
@@ -208,7 +219,7 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
                 _currentData.Deceleration);
 
             _interactionScanner.SetEquipmentInteractionState(true);
-            
+
             // TODO:
             // Play equip sound.
             // Play equip animation.
@@ -217,10 +228,10 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
         private void OnUnequipped()
         {
-            HasVisibilityResistance = false;
+            SetVisibilityResistance(false);
 
             _playerMotor.ResetEquipmentMovement();
-            
+
             _interactionScanner.SetEquipmentInteractionState(false);
 
             // TODO:
