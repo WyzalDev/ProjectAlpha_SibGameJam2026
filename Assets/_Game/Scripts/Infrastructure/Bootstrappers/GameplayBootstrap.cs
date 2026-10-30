@@ -1,6 +1,7 @@
 ﻿using _Game.Scripts.Core.Common;
 using _Game.Scripts.Core.Common.Input;
 using _Game.Scripts.Core.Features.Player;
+using _Game.Scripts.Core.Features.Player.Interact;
 using UnityEngine;
 
 namespace _Game.Scripts.Infrastructure.Bootstrappers
@@ -8,6 +9,7 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
     public class GameplayBootstrap : MonoBehaviour
     {
         [SerializeField] private PlayerMotor _player;
+        [SerializeField] private PlayerInteractionScanner _interactionScanner;
 
         private void Start()
         {
@@ -28,6 +30,9 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
                 _player.Init();
             else
                 Debug.LogError("Could not find any player motor!");
+
+            if (_interactionScanner != null)
+                _interactionScanner.Init();
         }
     }
 }
