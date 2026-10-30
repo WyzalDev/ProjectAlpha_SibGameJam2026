@@ -1,6 +1,7 @@
 ﻿using _Game.Scripts.Core.Common;
 using _Game.Scripts.Core.Common.Input;
 using _Game.Scripts.Core.Features.Player;
+using _Game.Scripts.Core.Features.Player.Death;
 using _Game.Scripts.Core.Features.Player.Interact;
 using _Game.Scripts.Core.Features.ThermalEquipment;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
         [SerializeField] private PlayerMotor _player;
         [SerializeField] private PlayerThermalEquipment _thermalEquipment;
         [SerializeField] private PlayerInteractionScanner _interactionScanner;
+        [SerializeField] private PlayerDeathController _playerDeathController;
 
         private void Start()
         {
@@ -38,6 +40,9 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
 
             if (_interactionScanner != null)
                 _interactionScanner.Init();
+
+            if (_playerDeathController != null)
+                _playerDeathController.Init();
         }
     }
 }

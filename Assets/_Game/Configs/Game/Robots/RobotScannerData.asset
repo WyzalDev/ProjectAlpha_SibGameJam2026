@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a238e846bbe462abf206bc2bc1c4c6a, type: 3}
+  m_Name: RobotScannerData
+  m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.Enemies.Scanner.RobotScannerData
+  ScanInterval: 0.2
+  Range: 9
+  HorizontalAngle: 90
+  VerticalAngle: 60
+  HorizontalSegments: 32
+  VerticalSegments: 16
+  RadialSegments: 4
+  VisualAlpha: 0.2
+  IdleColor: {r: 0.1, g: 0.4, b: 1, a: 1}
+  AttentionColor: {r: 1, g: 0.8, b: 0.05, a: 1}
+  ChaseColor: {r: 1, g: 0.05, b: 0.02, a: 1}
