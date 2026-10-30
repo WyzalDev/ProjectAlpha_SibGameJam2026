@@ -218,6 +218,8 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
                 _currentData.Acceleration,
                 _currentData.Deceleration);
 
+            _playerMotor.ResetHorizontalVelocity();
+            
             _interactionScanner.SetEquipmentInteractionState(true);
 
             // TODO:

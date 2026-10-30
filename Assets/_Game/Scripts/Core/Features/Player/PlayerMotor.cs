@@ -287,5 +287,11 @@ namespace _Game.Scripts.Core.Features.Player
         {
             _hasEquipmentMovement = false;
         }
+        
+        public void ResetHorizontalVelocity()
+        {
+            _horizontalVelocity = Vector3.zero;
+            _horizontalSmoothVelocity = Vector3.zero;
+        }
     }
 }
