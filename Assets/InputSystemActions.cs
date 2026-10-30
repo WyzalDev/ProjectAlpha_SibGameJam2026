@@ -118,7 +118,17 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
                     ""id"": ""852140f2-7766-474d-8707-702459ba45f3"",
                     ""expectedControlType"": """",
                     ""processors"": """",
-                    ""interactions"": ""Hold"",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false,
+                    ""priority"": 0
+                },
+                {
+                    ""name"": ""Unequip"",
+                    ""type"": ""Button"",
+                    ""id"": ""020b5ef9-14aa-4132-85e1-8ce223d30499"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
                     ""initialStateCheck"": false,
                     ""priority"": 0
                 },
@@ -219,6 +229,17 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": ""Keyboard&Mouse"",
                     ""action"": ""Interact"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""25a69bde-630c-40dc-83cb-251c6cd5bec6"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""Unequip"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -890,6 +911,7 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
         m_Gameplay_Move = m_Gameplay.FindAction("Move", throwIfNotFound: true);
         m_Gameplay_Look = m_Gameplay.FindAction("Look", throwIfNotFound: true);
         m_Gameplay_Interact = m_Gameplay.FindAction("Interact", throwIfNotFound: true);
+        m_Gameplay_Unequip = m_Gameplay.FindAction("Unequip", throwIfNotFound: true);
         m_Gameplay_Photo = m_Gameplay.FindAction("Photo", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
@@ -993,6 +1015,7 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
     private readonly InputAction m_Gameplay_Move;
     private readonly InputAction m_Gameplay_Look;
     private readonly InputAction m_Gameplay_Interact;
+    private readonly InputAction m_Gameplay_Unequip;
     private readonly InputAction m_Gameplay_Photo;
     /// <summary>
     /// Provides access to input actions defined in input action map "Gameplay".
@@ -1017,6 +1040,10 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Gameplay/Interact".
         /// </summary>
         public InputAction @Interact => m_Wrapper.m_Gameplay_Interact;
+        /// <summary>
+        /// Provides access to the underlying input action "Gameplay/Unequip".
+        /// </summary>
+        public InputAction @Unequip => m_Wrapper.m_Gameplay_Unequip;
         /// <summary>
         /// Provides access to the underlying input action "Gameplay/Photo".
         /// </summary>
@@ -1056,6 +1083,9 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
             @Interact.started += instance.OnInteract;
             @Interact.performed += instance.OnInteract;
             @Interact.canceled += instance.OnInteract;
+            @Unequip.started += instance.OnUnequip;
+            @Unequip.performed += instance.OnUnequip;
+            @Unequip.canceled += instance.OnUnequip;
             @Photo.started += instance.OnPhoto;
             @Photo.performed += instance.OnPhoto;
             @Photo.canceled += instance.OnPhoto;
@@ -1079,6 +1109,9 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
             @Interact.started -= instance.OnInteract;
             @Interact.performed -= instance.OnInteract;
             @Interact.canceled -= instance.OnInteract;
+            @Unequip.started -= instance.OnUnequip;
+            @Unequip.performed -= instance.OnUnequip;
+            @Unequip.canceled -= instance.OnUnequip;
             @Photo.started -= instance.OnPhoto;
             @Photo.performed -= instance.OnPhoto;
             @Photo.canceled -= instance.OnPhoto;
@@ -1521,6 +1554,13 @@ public partial class @InputSystemActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnInteract(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Unequip" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUnequip(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Photo" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

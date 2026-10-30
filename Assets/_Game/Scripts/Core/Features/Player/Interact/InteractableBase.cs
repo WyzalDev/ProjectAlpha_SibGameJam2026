@@ -19,7 +19,7 @@ namespace _Game.Scripts.Core.Features.Player.Interact
         protected InteractionContext CurrentContext { get; private set; }
         protected Outline Outline => _outline;
 
-        private void Awake()
+        protected virtual void Awake()
         {
             SetupOutline();
         }

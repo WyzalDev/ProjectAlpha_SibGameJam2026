@@ -26,6 +26,7 @@ namespace _Game.Scripts.Core.Common.Input
         public event Action<Vector2> PlayerMoveInputChanged;
         public event Action PhotoPerformed;
         public event Action InteractPerformed;
+        public event Action UnequipPerformed;
         public event Action ExitPerformed;
         public event Action ComicsSkipPerformed;
 
@@ -46,6 +47,7 @@ namespace _Game.Scripts.Core.Common.Input
             Input.Gameplay.Interact.performed += _ => InteractPerformed?.Invoke();
 
             Input.Gameplay.Photo.performed += _ => PhotoPerformed?.Invoke();
+            Input.Gameplay.Unequip.performed += _ => UnequipPerformed?.Invoke();
 
             // UI Map
             Input.UI.ComicsSkip.performed += _ => ComicsSkipPerformed?.Invoke();

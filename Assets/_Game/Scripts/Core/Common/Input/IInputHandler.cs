@@ -10,6 +10,7 @@ namespace _Game.Scripts.Core.Common.Input
         event Action PhotoPerformed;
         event Action InteractPerformed;
         event Action ExitPerformed;
+        event Action UnequipPerformed;
         event Action ComicsSkipPerformed;
 
         void Init();

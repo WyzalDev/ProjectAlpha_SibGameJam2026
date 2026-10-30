@@ -17,6 +17,11 @@ namespace _Game.Scripts.Core.Features.Player.Interact
         [Header("Settings")]
         [SerializeField] private LayerMask _scanMask = ~0;
 
+        [Header("Equipment")]
+        [SerializeField] private string _unequipPrompt = "Q - снять предмет";
+        
+        private bool _isEquipmentBlockingInteraction;
+
         private const int InitialBufferSize = 32;
         private const int MaxBufferSize = 256;
         private const int HitBufferSize = 16;
@@ -62,7 +67,7 @@ namespace _Game.Scripts.Core.Features.Player.Interact
 
         private void Update()
         {
-            if (!_canScan || _data == null)
+            if (!_canScan || _data == null || _isEquipmentBlockingInteraction)
                 return;
 
             _scanTimer += Time.deltaTime;
@@ -215,7 +220,7 @@ namespace _Game.Scripts.Core.Features.Player.Interact
 
         private void HandleInteractPerformed()
         {
-            if (!_canInteract)
+            if (!_canInteract || _isEquipmentBlockingInteraction)
                 return;
 
             if (!IsValid(_currentTarget))
@@ -234,6 +239,9 @@ namespace _Game.Scripts.Core.Features.Player.Interact
         {
             _canScan = false;
             _canInteract = false;
+            
+            ChangeTarget(null);
+            _prompt.Hide();
         }
 
         public void Resume()
@@ -242,7 +250,37 @@ namespace _Game.Scripts.Core.Features.Player.Interact
             _canInteract = true;
             _scanTimer = 0f;
 
+            if (_isEquipmentBlockingInteraction)
+            {
+                _prompt.Show(_unequipPrompt);
+                return;
+            }
+
             Scan();
+        }
+        
+        public void SetEquipmentInteractionState(bool isEquipped)
+        {
+            _isEquipmentBlockingInteraction = isEquipped;
+
+            if (isEquipped)
+            {
+                // Remove current hover.
+                ChangeTarget(null);
+
+                // Show equipment prompt.
+                _prompt.Show(_unequipPrompt);
+                return;
+            }
+
+            // Hide equipment prompt.
+            _prompt.Hide();
+
+            // Immediately scan for nearby interactable objects.
+            _scanTimer = 0f;
+
+            if (_canScan)
+                Scan();
         }
     }
 }

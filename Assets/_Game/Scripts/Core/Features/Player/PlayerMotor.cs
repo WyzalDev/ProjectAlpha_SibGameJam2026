@@ -29,6 +29,13 @@ namespace _Game.Scripts.Core.Features.Player
         private Vector3 _horizontalSmoothVelocity;
         private float _verticalVelocity;
         private bool _canMove = true;
+        
+        private bool _hasEquipmentMovement;
+
+        private float _equipmentSpeedMultiplier = 1f;
+        private float _equipmentMaxSpeed = 3f;
+        private float _equipmentAcceleration = 3f;
+        private float _equipmentDeceleration = 1.5f;
 
         public float SpeedMultiplier { get; set; } = 1f;
         public float GroundCheckDistance => _data.GroundCheckDistance;
@@ -83,7 +90,9 @@ namespace _Game.Scripts.Core.Features.Player
             bool wasGrounded = _controller.isGrounded;
 
             Vector3 inputDirection = GetInputDirection();
-            Vector3 horizontalVelocity = CalculateHorizontalVelocity(inputDirection);
+            Vector3 horizontalVelocity = _hasEquipmentMovement
+                ? CalculateHorizontalVelocityWithEquipment(inputDirection)
+                : CalculateHorizontalVelocity(inputDirection);
             float verticalVelocity = CalculateVerticalVelocity(wasGrounded);
 
             RotateTowardsMovement(inputDirection);
@@ -119,16 +128,39 @@ namespace _Game.Scripts.Core.Features.Player
 
         private Vector3 CalculateHorizontalVelocity(Vector3 inputDirection)
         {
-            Vector3 targetVelocity = _data.MoveSpeed * SpeedMultiplier * inputDirection;
+            Vector3 normalTargetVelocity = _data.MoveSpeed * SpeedMultiplier * inputDirection;
 
             _horizontalVelocity = Vector3.SmoothDamp(
                 _horizontalVelocity,
-                targetVelocity,
+                normalTargetVelocity,
                 ref _horizontalSmoothVelocity,
                 _data.SmoothMoveDeltaTime);
 
             _horizontalVelocity.y = 0f;
             _horizontalSmoothVelocity.y = 0f;
+
+            return _horizontalVelocity;
+        }
+        
+        private Vector3 CalculateHorizontalVelocityWithEquipment(Vector3 inputDirection)
+        {
+            var targetSpeed = _data.MoveSpeed * SpeedMultiplier *
+                                _equipmentSpeedMultiplier;
+
+            targetSpeed = Mathf.Min(targetSpeed, _equipmentMaxSpeed);
+
+            var targetVelocity = inputDirection * targetSpeed;
+
+            var acceleration = inputDirection.sqrMagnitude > 0.0001f
+                ? _equipmentAcceleration
+                : _equipmentDeceleration;
+
+            _horizontalVelocity = Vector3.MoveTowards(
+                _horizontalVelocity,
+                targetVelocity,
+                acceleration * Time.deltaTime);
+
+            _horizontalVelocity.y = 0f;
 
             return _horizontalVelocity;
         }
@@ -235,6 +267,25 @@ namespace _Game.Scripts.Core.Features.Player
         public void Resume()
         {
             _canMove = true;
+        }
+        
+        public void SetEquipmentMovement(
+            float speedMultiplier,
+            float maxSpeed,
+            float acceleration,
+            float deceleration)
+        {
+            _hasEquipmentMovement = true;
+
+            _equipmentSpeedMultiplier = speedMultiplier;
+            _equipmentMaxSpeed = maxSpeed;
+            _equipmentAcceleration = acceleration;
+            _equipmentDeceleration = deceleration;
+        }
+
+        public void ResetEquipmentMovement()
+        {
+            _hasEquipmentMovement = false;
         }
     }
 }
