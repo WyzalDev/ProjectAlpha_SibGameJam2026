@@ -13,9 +13,13 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
         [SerializeField] private PlayerMotor _playerMotor;
         [SerializeField] private PlayerInteractionScanner _interactionScanner;
         [SerializeField] private Transform _equipmentAnchor;
+        [SerializeField] private Transform _equipmentDropPoint;
 
         [Header("State")]
         [SerializeField] private float _currentHeat;
+
+        [Header("Manual Unequip Cooldown")]
+        [SerializeField, Min(0f)] private float _manualUnequipCooldown = 1f;
 
         public bool HasVisibilityResistance { get; private set; }
         public float CurrentHeat => _currentHeat;
@@ -35,6 +39,8 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
         private bool _isInitialized;
 
         private float _lastCoolingSpeed;
+
+        private float _nextEquipAllowedTime;
 
         public void Init()
         {
@@ -77,6 +83,9 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
         public bool TryEquip(ThermalEquipmentItem item)
         {
+            if (Time.time < _nextEquipAllowedTime)
+                return false;
+            
             if (item == null || IsEquipped || _isOverheated)
                 return false;
 
@@ -103,12 +112,16 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
             Unequip(false);
 
+            _nextEquipAllowedTime =
+                Time.time + _manualUnequipCooldown;
+
             return true;
         }
 
         private bool CheckReferences(ThermalEquipmentItem item)
         {
-            if (_playerMotor == null ||
+            if (_equipmentDropPoint == null ||
+                _playerMotor == null ||
                 _interactionScanner == null ||
                 _equipmentAnchor == null ||
                 item.Data == null)
@@ -160,8 +173,12 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
             _lastCoolingSpeed = _currentData.CoolingPerSecond;
 
+            Collider[] playerColliders =
+                _playerMotor.GetComponentsInChildren<Collider>(true);
+
             _currentItem.Detach(
-                transform.position + transform.forward * 0.5f);
+                _equipmentDropPoint.position,
+                playerColliders);
 
             _currentItem = null;
             _currentData = null;
@@ -198,6 +215,13 @@ namespace _Game.Scripts.Core.Features.ThermalEquipment
 
             HasVisibilityResistance = value;
             VisibilityResistanceChanged?.Invoke(value);
+        }
+
+        private void OnValidate()
+        {
+            _manualUnequipCooldown = Mathf.Max(
+                0f,
+                _manualUnequipCooldown);
         }
 
         private void PlayOverheatFeedback()
