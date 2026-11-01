@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 662199f712de4d46b8b827ac4e4cdaf5, type: 3}
   m_Name: RobotData
   m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.Enemies.Data.RobotData
-  MoveSpeed: 3
+  MoveSpeed: 6
   Acceleration: 8
-  AngularSpeed: 360
+  AngularSpeed: 540
   StoppingDistance: 1
   AttentionDuration: {x: 1, y: 2}
   StunDuration: 1

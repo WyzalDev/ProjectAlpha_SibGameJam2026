@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8e29098bb05f4af1bf141607fc07c75b, type: 3}
   m_Name: PlayerMovementData
   m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.Player.PlayerMovementData
-  <MoveSpeed>k__BackingField: 12
-  <TurnSpeed>k__BackingField: 360
+  <MoveSpeed>k__BackingField: 8
+  <TurnSpeed>k__BackingField: 540
   <SmoothMoveDeltaTime>k__BackingField: 0.1
   <Gravity>k__BackingField: -19.6
   <GroundCheckDistance>k__BackingField: 2

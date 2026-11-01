@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a238e846bbe462abf206bc2bc1c4c6a, type: 3}
   m_Name: RobotScannerData
   m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.Enemies.Scanner.RobotScannerData
-  ScanInterval: 0.2
-  Range: 9
-  HorizontalAngle: 90
-  VerticalAngle: 60
+  ScanInterval: 0.1
+  Range: 15.47
+  HorizontalAngle: 116
+  VerticalAngle: 121
   HorizontalSegments: 32
   VerticalSegments: 16
-  RadialSegments: 4
-  VisualAlpha: 0.2
+  RadialSegments: 3
+  VisualAlpha: 0.264
   IdleColor: {r: 0.1, g: 0.4, b: 1, a: 1}
   AttentionColor: {r: 1, g: 0.8, b: 0.05, a: 1}
   ChaseColor: {r: 1, g: 0.05, b: 0.02, a: 1}

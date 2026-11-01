@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2585537248756613614}
-  - component: {fileID: 915282027170317669}
   - component: {fileID: 3198984641314297158}
   m_Layer: 0
   m_Name: InteractableDoor
@@ -34,24 +33,6 @@ Transform:
   - {fileID: 3025522957807220172}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &915282027170317669
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6260395286553873624}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 02ab1473e3114cf7878e8693f3b8af02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::_Game.Scripts.Core.Features.InteractItems.InteractableDoor
-  _doorVisual: {fileID: 3025522957807220172}
-  _openDuration: 1
-  _closeDuration: 1
-  _openDistance: 3
-  _openEase: 9
-  _closeEase: 8
 --- !u!114 &3198984641314297158
 MonoBehaviour:
   m_ObjectHideFlags: 0
