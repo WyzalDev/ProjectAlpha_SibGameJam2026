@@ -1,20 +1,22 @@
 ﻿using _Game.Scripts.Core.Common;
 using _Game.Scripts.Core.Common.Pause;
-using _Game.Scripts.Core.Features.Player.Interact;
 using DG.Tweening;
 using UnityEngine;
 
-namespace _Game.Scripts.Core.Features.InteractItems
+namespace _Game.Scripts.Core.Features.InteractDoor
 {
-    public class InteractableDoor : InteractableBase, IPausable
+    public class InteractableDoor : MonoBehaviour, IPausable
     {
         [Header("References")]
         [SerializeField] private Transform _doorVisual;
 
         [Header("Movement")]
         [SerializeField, Min(0.01f)] private float _openDuration = 1f;
+        [SerializeField, Min(0.01f)] private float _closeDuration = 1f;
         [SerializeField] private float _openDistance = 3f;
+
         [SerializeField] private Ease _openEase = Ease.OutCubic;
+        [SerializeField] private Ease _closeEase = Ease.InCubic;
 
         private Vector3 _closedLocalPosition;
         private Vector3 _openLocalPosition;
@@ -27,10 +29,8 @@ namespace _Game.Scripts.Core.Features.InteractItems
 
         public bool IsOpen => _isOpen;
 
-        protected override void Awake()
+        private void Awake()
         {
-            base.Awake();
-
             if (_doorVisual == null)
             {
                 Debug.LogError(
@@ -42,7 +42,6 @@ namespace _Game.Scripts.Core.Features.InteractItems
             }
 
             _closedLocalPosition = _doorVisual.localPosition;
-
             _openLocalPosition =
                 _closedLocalPosition + Vector3.up * _openDistance;
         }
@@ -53,13 +52,6 @@ namespace _Game.Scripts.Core.Features.InteractItems
             _pauseController?.Add(this);
         }
 
-        public override void Interact(InteractionContext context)
-        {
-            base.Interact(context);
-
-            Open();
-        }
-
         public void Open()
         {
             if (_isOpen)
@@ -67,31 +59,50 @@ namespace _Game.Scripts.Core.Features.InteractItems
 
             _isOpen = true;
 
-            AnimateDoor();
+            AnimateDoor(
+                _openLocalPosition,
+                _openDuration,
+                _openEase);
         }
 
-        private void AnimateDoor()
+        public void Close()
+        {
+            if (!_isOpen)
+                return;
+
+            _isOpen = false;
+
+            AnimateDoor(
+                _closedLocalPosition,
+                _closeDuration,
+                _closeEase);
+        }
+
+        private void AnimateDoor(
+            Vector3 targetPosition,
+            float duration,
+            Ease ease)
         {
             _movementTween?.Kill();
 
             float distance = Vector3.Distance(
                 _doorVisual.localPosition,
-                _openLocalPosition);
+                targetPosition);
 
             float normalizedDistance =
                 distance / Mathf.Max(_openDistance, 0.001f);
 
-            float actualDuration = _openDuration * normalizedDistance;
+            float actualDuration = duration * normalizedDistance;
 
             if (actualDuration <= 0.001f)
             {
-                _doorVisual.localPosition = _openLocalPosition;
+                _doorVisual.localPosition = targetPosition;
                 return;
             }
 
             _movementTween = _doorVisual
-                .DOLocalMove(_openLocalPosition, actualDuration)
-                .SetEase(_openEase)
+                .DOLocalMove(targetPosition, actualDuration)
+                .SetEase(ease)
                 .SetLink(gameObject, LinkBehaviour.KillOnDestroy);
         }
 
@@ -109,6 +120,7 @@ namespace _Game.Scripts.Core.Features.InteractItems
         private void OnValidate()
         {
             _openDuration = Mathf.Max(0.01f, _openDuration);
+            _closeDuration = Mathf.Max(0.01f, _closeDuration);
             _openDistance = Mathf.Max(0f, _openDistance);
         }
 

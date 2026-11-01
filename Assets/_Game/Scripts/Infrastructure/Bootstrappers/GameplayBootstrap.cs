@@ -3,6 +3,7 @@ using _Game.Scripts.Core.Common;
 using _Game.Scripts.Core.Common.Input;
 using _Game.Scripts.Core.Features.Enemies;
 using _Game.Scripts.Core.Features.Enemies.Swarm;
+using _Game.Scripts.Core.Features.InteractDoor;
 using _Game.Scripts.Core.Features.Player;
 using _Game.Scripts.Core.Features.Player.Death;
 using _Game.Scripts.Core.Features.Player.Flash;
@@ -26,6 +27,7 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
         [SerializeField] private List<PressurePlate> pressurePlates;
         [SerializeField] private List<PressurePlateDoor> pressurePlateDoors;
         [SerializeField] private List<RobotAI> _robots;
+        [SerializeField] private List<InteractableDoor> _interactableDoors;
         private void Start()
         {
             //TODO когда будет занавеска  var curtain = ServiceLocator.GetService<ILoadingCurtain>();
@@ -43,6 +45,9 @@ namespace _Game.Scripts.Infrastructure.Bootstrappers
 
             foreach (var robot in _robots)
                 robot.Init();
+
+            foreach (var doorButton in _interactableDoors)
+                doorButton.Init();
             
             input.Enable();
             input.SwitchToGameplayMap();
